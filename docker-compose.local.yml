@@ -1,0 +1,30 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"          # Ollama 默认 API 端口
+    volumes:
+      # GGUF 源文件，只读，供 ollama create 读取
+      - D:/jiansu/justune/model/Qwen3.5-9B-Q4_K_M:/models:ro
+      # Ollama 模型仓库，可写，放在项目文件夹里
+      - D:/jiansu/justune/ollama-models:/ollama-models
+    environment:
+      # 告诉 Ollama 从 /models 目录读取模型文件
+      - OLLAMA_MODELS=/ollama-models
+      # 允许容器外（Justune）访问
+      - OLLAMA_HOST=0.0.0.0:11434
+    # Intel Arc GPU 直通（如果 Docker Desktop 支持）
+    # 如果下面的 devices 行报错，可以先注释掉，用 CPU 模式启动
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+
+volumes:
+  ollama_data:
